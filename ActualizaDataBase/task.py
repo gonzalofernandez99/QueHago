@@ -1,6 +1,8 @@
 from RPA.Browser.Selenium import Selenium
 import mysql.connector
 import time
+import re
+
 def Database(host,user,password,database,data):
     cnx = mysql.connector.connect(
     host=host,    # El host donde está tu base de datos (en este caso, localhost)
@@ -34,9 +36,29 @@ def get_information(url):
     element_info = "xpath://td[@align='left']//p"
     browser.wait_until_page_contains_element(element_info)
     titles = browser.find_elements(element_info)
-    for i in range(len(titles)):
-        print(titles[i].text)
-        
+    texto = "\n".join([title.text for title in titles])
+    duracion_regex = re.search(r'Duración aproximada de la carrera: (.+?)\n', texto)
+    duracion = duracion_regex.group(1) if duracion_regex else ""
+
+    objetivos_regex = re.search(r'Objetivos de la carrera:(.+?)(Campo Ocupacional - Salida Laboral:|Fuente)', texto, re.DOTALL)
+
+    if objetivos_regex:
+        objetivos = objetivos_regex.group(1)
+        objetivos = re.sub(r'\n+', '\n', objetivos)  # Esto limpia los saltos de línea adicionales
+    else:
+        print("No se encontraron los objetivos.")
+
+
+    # Para obtener la información después de "Campo Ocupacional - Salida Laboral:"
+    salida_laboral_regex = re.search(r'Campo Ocupacional - Salida Laboral:(.+?)(Fuente)', texto, re.DOTALL)
+    salida_laboral = salida_laboral_regex.group(1).strip() if salida_laboral_regex else ""
+    print(texto)
+    print("a a a a a a ")
+    print(duracion)
+    print("acaaaa")
+    print(objetivos)
+    print("acaaaa22")
+    print(salida_laboral)
 def click_career(url,title_start,title_end):
     browser = Selenium()
     browser.open_available_browser(url)
