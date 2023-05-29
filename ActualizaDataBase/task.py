@@ -23,7 +23,7 @@ def Database(host,user,password,database,data):
     cursor.close()
     cnx.close()
 
-def open_nytimes(url,browser):
+def open_web(url,browser):
     #Opens the browser and loads the provided URL.
     
     browser.open_available_browser(url)
@@ -48,38 +48,59 @@ def regex_info(info):
     
     
     return duracion,objetivos,salida_laboral
-def get_information(url,browser):
 
+def click_carrer(title,browser):
+    browser.wait_until_element_is_visible(title)
+    browser.click_element(title)
+    
+def get_information(browser,title,data):
     element_info = "xpath://td[@align='left']//p"
     browser.wait_until_page_contains_element(element_info)
-    titles = browser.find_elements(element_info)
-    texto = "\n".join([title.text for title in titles])
+    informacion = browser.find_elements(element_info)
+    texto = "\n".join([info.text for info in informacion])
     duracion,objetivo,salida = regex_info(texto)
-   
-def click_career(url,title_start,title_end):
-    browser = Selenium()
-    browser.open_available_browser(url)
-    browser.maximize_browser_window()  
-    data = []
+    data.append({
+        "title":title,
+        "duracion":duracion,
+        "objetivo":objetivo,
+        "salida":salida
+    })
+    
+    return data
+
+def career_list(browser):
     element_title = "xpath://td[@align='left']//a"
     browser.wait_until_page_contains_element(element_title)
     titles = browser.find_elements(element_title)
     
-    start = False
-    for i in range(len(titles)):
-        if(titles[i].text == title_start):
-            start = True
-        if(start):
-            browser.wait_until_element_is_visible(titles[i])
-            browser.click_element(titles[i])
-            time.sleep(10)
-        if(titles[i].text == title_end):
-            start = False
-    return data
-def minimal_task():
-    url = "https://www.carrerasytrabajos.com.ar/CARRERAS/abogacia.html"
-    #click_career(url,"Abogacía","Yoga")
-    get_information(url)
+    return titles
 
+def minimal_task():
+    url = "https://www.carrerasytrabajos.com.ar/carreras-lista/carreras-en-argentina-donde-estudiar-universidades.html"
+    browser = Selenium()
+    start = False
+    title_start = "Abogacia"
+    title_end ="yoga"
+    data = []
+    try:
+        open_web(url,browser)
+        titles=career_list
+        for i in range(len(titles)):
+            if(titles[i].text == title_start):
+                start = True
+            if(start):
+                click_carrer(titles[i],browser)
+                get_information(browser,titles[i].text,data)
+                time.sleep(10)
+            if(titles[i].text == title_end):
+                start = False
+    except TimeoutError as te:
+        print("Error: A TimeoutError occurred: ",te)
+    except Exception as e:
+        print("Error: An unexpected error occurred: ", e)
+    finally:
+        browser.close_all_browsers()
+    
+    
 if __name__ == "__main__":
     minimal_task()
