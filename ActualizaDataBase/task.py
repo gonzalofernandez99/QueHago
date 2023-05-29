@@ -29,18 +29,11 @@ def open_nytimes(url,browser):
     browser.open_available_browser(url)
     browser.maximize_browser_window()  
     
-def get_information(url):
-    browser = Selenium()
-    browser.open_available_browser(url)
-    browser.maximize_browser_window() 
-    element_info = "xpath://td[@align='left']//p"
-    browser.wait_until_page_contains_element(element_info)
-    titles = browser.find_elements(element_info)
-    texto = "\n".join([title.text for title in titles])
-    duracion_regex = re.search(r'Duración aproximada de la carrera: (.+?)\n', texto)
+def regex_info(info):
+    duracion_regex = re.search(r'Duración aproximada de la carrera: (.+?)\n', info)
     duracion = duracion_regex.group(1) if duracion_regex else ""
-
-    objetivos_regex = re.search(r'Objetivos de la carrera:(.+?)(Campo Ocupacional - Salida Laboral:|Fuente)', texto, re.DOTALL)
+    
+    objetivos_regex = re.search(r'Objetivos de la carrera:(.+?)(Campo Ocupacional - Salida Laboral:|Fuente)', info, re.DOTALL)
 
     if objetivos_regex:
         objetivos = objetivos_regex.group(1)
@@ -50,15 +43,19 @@ def get_information(url):
 
 
     # Para obtener la información después de "Campo Ocupacional - Salida Laboral:"
-    salida_laboral_regex = re.search(r'Campo Ocupacional - Salida Laboral:(.+?)(Fuente)', texto, re.DOTALL)
+    salida_laboral_regex = re.search(r'Salida Laboral:(.+?)(Fuente)', info, re.DOTALL)
     salida_laboral = salida_laboral_regex.group(1).strip() if salida_laboral_regex else ""
-    print(texto)
-    print("a a a a a a ")
-    print(duracion)
-    print("acaaaa")
-    print(objetivos)
-    print("acaaaa22")
-    print(salida_laboral)
+    
+    
+    return duracion,objetivos,salida_laboral
+def get_information(url,browser):
+
+    element_info = "xpath://td[@align='left']//p"
+    browser.wait_until_page_contains_element(element_info)
+    titles = browser.find_elements(element_info)
+    texto = "\n".join([title.text for title in titles])
+    duracion,objetivo,salida = regex_info(texto)
+   
 def click_career(url,title_start,title_end):
     browser = Selenium()
     browser.open_available_browser(url)
