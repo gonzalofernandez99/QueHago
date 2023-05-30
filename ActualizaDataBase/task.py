@@ -33,7 +33,10 @@ def regex_info(info):
     duracion_regex = re.search(r'Duración aproximada de la carrera: (.+?)\n', info)
     duracion = duracion_regex.group(1) if duracion_regex else ""
     
-    objetivos_regex = re.search(r'Objetivos de la carrera:(.+?)(Campo Ocupacional - Salida Laboral:|Fuente)', info, re.DOTALL)
+    objetivos_regex = re.search(r'Objetivos de la carrera(.+?)(Salida Laboral:|¿DÓNDE ESTUDIAR)', info, re.DOTALL)
+
+    # asignamos un valor por defecto a objetivos
+    objetivos = ''
 
     if objetivos_regex:
         objetivos = objetivos_regex.group(1)
@@ -43,11 +46,11 @@ def regex_info(info):
 
 
     # Para obtener la información después de "Campo Ocupacional - Salida Laboral:"
-    salida_laboral_regex = re.search(r'Salida Laboral:(.+?)(Fuente)', info, re.DOTALL)
+    salida_laboral_regex = re.search(r'Salida Laboral:(.+?)(¿DÓNDE ESTUDIAR)', info, re.DOTALL)
     salida_laboral = salida_laboral_regex.group(1).strip() if salida_laboral_regex else ""
     
-    
-    return duracion,objetivos,salida_laboral
+    return duracion, objetivos, salida_laboral
+
 
 def click_carrer(title,browser):
     browser.wait_until_element_is_visible(title)
@@ -94,33 +97,39 @@ def minimal_task():
     browser = Selenium()
     start = False
     title_start = "Abogacía"
-    title_end ="yoga"
+    title_end = "Yoga"
     data = []
     try:
-        open_web(url,browser)
-        i = 0
-        while True:
-            titles=career_list(browser)
-            if i >= len(titles):
-                break
-            if(titles[i].text == title_start):
+        open_web(url, browser)
+        titles_elements = career_list(browser)
+        
+        # Guardamos los textos de los títulos en una lista
+        titles = [title.text for title in titles_elements]
+
+        for title in titles:
+            if title == title_start:
                 start = True
-            if(start):
-                click_carrer(titles[i],browser)
-                titulo = titles[i].text
-                print(titulo)
-                get_information(browser,titulo,data)
-                time.sleep(5)
-            if(titles[i].text == title_end):
+            if start:
+                # Usamos el texto del título para encontrar y hacer clic en el elemento del título
+                title_element = browser.find_element(f"link:{title}")
+                click_carrer(title_element, browser)
+                print(title)
+                time.sleep(15)
+                get_information(browser, title, data)
+                time.sleep(15)
+            if title == title_end:
                 start = False
-            i += 1
+
         print[data]
+
     except TimeoutError as te:
-        print("Error: A TimeoutError occurred: ",te)
+        print("Error: A TimeoutError occurred: ", te)
     except Exception as e:
         print("Error: An unexpected error occurred: ", e)
     finally:
         browser.close_all_browsers()
+
+
 
     
     
