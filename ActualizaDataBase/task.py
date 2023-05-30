@@ -54,8 +54,10 @@ def click_carrer(title,browser):
     browser.click_element(title)
     
 def get_information(browser,title,data):
+
     element_info = "xpath://td[@align='left']//p"
-    browser.wait_until_page_contains_element(element_info)
+    time.sleep(10)
+    browser.is_element_enabled(element_info,10)
     informacion = browser.find_elements(element_info)
     texto = "\n".join([info.text for info in informacion])
     duracion,objetivo,salida = regex_info(texto)
@@ -66,6 +68,7 @@ def get_information(browser,title,data):
         "salida":salida
     })
     
+    browser.go_back()
     return data
 
 def career_list(browser):
@@ -75,32 +78,52 @@ def career_list(browser):
     
     return titles
 
+def test_get_information():
+    browser = Selenium()
+    url = "https://www.carrerasytrabajos.com.ar/CARRERAS/abogacia.html"
+    title = "Abogacia"
+    data = []
+    
+    open_web(url,browser)
+    get_information(browser,title,data)
+    print(data)
+    
+
 def minimal_task():
     url = "https://www.carrerasytrabajos.com.ar/carreras-lista/carreras-en-argentina-donde-estudiar-universidades.html"
     browser = Selenium()
     start = False
-    title_start = "Abogacia"
+    title_start = "Abogacía"
     title_end ="yoga"
     data = []
     try:
         open_web(url,browser)
-        titles=career_list
-        for i in range(len(titles)):
+        i = 0
+        while True:
+            titles=career_list(browser)
+            if i >= len(titles):
+                break
             if(titles[i].text == title_start):
                 start = True
             if(start):
                 click_carrer(titles[i],browser)
-                get_information(browser,titles[i].text,data)
-                time.sleep(10)
+                titulo = titles[i].text
+                print(titulo)
+                get_information(browser,titulo,data)
+                time.sleep(5)
             if(titles[i].text == title_end):
                 start = False
+            i += 1
+        print[data]
     except TimeoutError as te:
         print("Error: A TimeoutError occurred: ",te)
     except Exception as e:
         print("Error: An unexpected error occurred: ", e)
     finally:
         browser.close_all_browsers()
+
     
     
 if __name__ == "__main__":
     minimal_task()
+    #test_get_information()
